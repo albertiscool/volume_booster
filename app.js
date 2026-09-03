@@ -702,7 +702,7 @@ async function exportWithFFmpeg(volumeMultiplier) {
   if (elements.vocalToggle.checked) {
     filters.push('equalizer=f=2400:width_type=h:width=1200:g=6');
   }
-  filters.push(`volume=${volumeMultiplier.toFixed(2)}`);
+  filters.push(`volume=${volumeMultiplier.toFixed(2)}:precision=float`);
 
   // Strictly align with the Soft Limiter switch above:
   // - If switch is OFF: Do NOT apply any limiter or compressor! (100% raw amplified audio)
