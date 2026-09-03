@@ -594,6 +594,7 @@ async function getFFmpeg() {
     // Use single-threaded core that works everywhere without SharedArrayBuffer or cross-origin restrictions
     const ffmpeg = createFFmpeg({
       log: false,
+      mainName: 'main',
       corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
     });
 
@@ -712,6 +713,9 @@ async function exportWithFFmpeg(volumeMultiplier) {
   } catch (e) {
     // Ignore cleanup error
   }
+
+  // Free instance memory for next run
+  ffmpegInstance = null;
 
   return new Blob([data.buffer], { type: 'video/mp4' });
 }
