@@ -646,7 +646,10 @@ async function handleExport() {
 
     elements.downloadLink.href = exportedBlobUrl;
     elements.downloadLink.download = outputFilename;
-    elements.exportResultMeta.textContent = `${outputFilename} (${formatBytes(outputBlob.size)}) • 處理耗時僅數秒`;
+    const limiterStateStr = elements.limiterToggle.checked
+      ? (currentLang === 'zh-TW' ? '限制器: 開啟' : 'Limiter: ON')
+      : (currentLang === 'zh-TW' ? '限制器: 關閉' : 'Limiter: OFF');
+    elements.exportResultMeta.textContent = `${outputFilename} (${formatBytes(outputBlob.size)}) • ${limiterStateStr}`;
 
     updateExportProgress(100, currentLang === 'zh-TW' ? '處理完成！' : 'Completed!');
     elements.exportProgressBox.classList.add('hidden');
@@ -685,12 +688,19 @@ async function exportWithFFmpeg(volumeMultiplier) {
     filters.push('equalizer=f=2400:width_type=h:width=1200:g=6');
   }
   filters.push(`volume=${volumeMultiplier.toFixed(2)}`);
+
+  // Strictly align with the Soft Limiter switch above:
+  // - If switch is OFF: Do NOT apply any limiter or compressor! (100% raw amplified audio)
+  // - If switch is ON: Apply the exact same compressor dynamics as Web Audio API without auto-level clamp
   if (elements.limiterToggle.checked) {
-    filters.push('alimiter=limit=0.95:attack=5:release=50');
+    filters.push('acompressor=threshold=-12dB:ratio=14:attack=3:release=250:knee=24dB');
   }
 
   const filterString = filters.join(',');
-  updateExportProgress(35, currentLang === 'zh-TW' ? '正在無損放大音軌（視訊直接複製，原畫質 100%）...' : 'Boosting audio track...');
+  const limiterMsg = elements.limiterToggle.checked
+    ? (currentLang === 'zh-TW' ? '已啟用防破音限制器' : 'Limiter ON')
+    : (currentLang === 'zh-TW' ? '無限制器(原始增益)' : 'Limiter OFF');
+  updateExportProgress(35, currentLang === 'zh-TW' ? `正在無損放大音軌（${limiterMsg}，原畫質 100%）...` : `Boosting audio (${limiterMsg})...`);
 
   // Execute FFmpeg: -c:v copy ensures video is NOT decoded or re-encoded. Fast in seconds!
   await ffmpeg.run(
