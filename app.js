@@ -8,7 +8,7 @@ const I18N = {
   'zh-TW': {
     hero_badge: '100% 瀏覽器本地運算 • 零上傳 • 隱私安全',
     hero_title: '讓你的影片聲音不再細小無聲',
-    hero_desc: '支援高達 600% 音量增強，搭載防破音智慧壓縮器與人聲清晰化。即時預覽試聽，極速無損匯出新影片！',
+    hero_desc: '支援高達 2000% (+26dB) 音量增強，搭載防破音智慧壓縮器與人聲清晰化。即時預覽試聽，極速無損匯出新影片！',
     drop_title: '選取影片檔案或將檔案拖曳至此',
     drop_subtitle: '支援 MP4、WebM、MOV、MKV、AVI、3GP 等常見格式（檔案大小不受限）',
     pick_local: '選取本機檔案 (下載/資料夾)',
@@ -46,7 +46,7 @@ const I18N = {
   'en': {
     hero_badge: '100% Client-Side • Zero Upload • Privacy First',
     hero_title: 'Boost Low-Volume Videos Instantly',
-    hero_desc: 'Up to 600% sound boost with anti-clipping limiter and vocal clarity enhancer. Real-time preview & fast lossless export!',
+    hero_desc: 'Up to 2000% (+26dB) sound boost with anti-clipping limiter and vocal clarity enhancer. Real-time preview & fast lossless export!',
     drop_title: 'Select video file or drag & drop here',
     drop_subtitle: 'Supports MP4, WebM, MOV, MKV, AVI, 3GP and more (no file size limits)',
     pick_local: 'Browse Local Files (Storage / Downloads)',
@@ -244,7 +244,7 @@ function setupEventListeners() {
   // Custom Input
   elements.applyCustomBtn.addEventListener('click', () => {
     const val = parseInt(elements.customVolumeInput.value, 10);
-    if (!isNaN(val) && val >= 0 && val <= 1000) {
+    if (!isNaN(val) && val >= 0 && val <= 2000) {
       setVolume(val);
     }
   });
@@ -326,9 +326,9 @@ function handleFileSelected(file) {
 
 // --- Volume Calculation & Updates ---
 function setVolume(percent) {
-  percent = Math.max(0, Math.min(1000, percent));
+  percent = Math.max(0, Math.min(2000, percent));
 
-  elements.volumeSlider.value = Math.min(600, percent);
+  elements.volumeSlider.value = Math.min(2000, percent);
   elements.customVolumeInput.value = percent;
   elements.volumePercentDisplay.textContent = `${percent}%`;
 
