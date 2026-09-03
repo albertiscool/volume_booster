@@ -131,6 +131,7 @@ const elements = {
   applyCustomBtn: document.getElementById('applyCustomBtn'),
   presetBtns: document.querySelectorAll('.preset-btn'),
   limiterToggle: document.getElementById('limiterToggle'),
+  limiterStatusNote: document.getElementById('limiterStatusNote'),
   vocalToggle: document.getElementById('vocalToggle'),
   bassToggle: document.getElementById('bassToggle'),
   exportBtn: document.getElementById('exportBtn'),
@@ -445,6 +446,20 @@ function rebuildAudioRouting() {
 }
 
 function updateAudioNodes() {
+  if (elements.limiterStatusNote) {
+    if (elements.limiterToggle.checked) {
+      elements.limiterStatusNote.textContent = currentLang === 'zh-TW'
+        ? '🛡️ 已開啟：平滑保護防爆音（大音量會被適度壓制）'
+        : '🛡️ Limiter ON: Smooth Peaks Protection';
+      elements.limiterStatusNote.className = 'text-[10px] text-teal-400 font-mono pt-0.5';
+    } else {
+      elements.limiterStatusNote.textContent = currentLang === 'zh-TW'
+        ? '⚡ 已關閉：無任何抑制，100% 原始極限放大！'
+        : '⚡ Limiter OFF: 100% Raw Uncompressed Gain!';
+      elements.limiterStatusNote.className = 'text-[10px] text-amber-400 font-mono pt-0.5 font-bold animate-pulse';
+    }
+  }
+
   if (!isAudioGraphSetup) return;
 
   bassFilterNode.gain.setTargetAtTime(elements.bassToggle.checked ? 7 : 0, audioCtx.currentTime, 0.05);
@@ -807,6 +822,11 @@ async function exportWithBrowserRecorder() {
 // --- Preview Exported Video ---
 function previewExportedVideo() {
   if (!exportedBlobUrl) return;
+
+  // Crucial fix: Reset Web Audio gain to 1.0 (100%) so the already-amplified video
+  // is NOT multiplied a second time! This ensures web preview sounds 100% identical to the downloaded file.
+  setVolume(100);
+
   elements.mainVideo.src = exportedBlobUrl;
   elements.mainVideo.load();
   elements.mainVideo.play();

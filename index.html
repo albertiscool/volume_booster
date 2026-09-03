@@ -305,8 +305,11 @@
                   <span data-i18n="limiter_title">智慧防破音限制器 (Soft Limiter)</span>
                 </div>
                 <p class="text-[11px] text-slate-400" data-i18n="limiter_desc">
-                  強烈建議開啟！大幅放大音量時自動平滑波峰，消除爆音雜音。
+                  大幅放大音量時自動平滑波峰，消除爆音雜音。
                 </p>
+                <div id="limiterStatusNote" class="text-[10px] text-teal-400 font-mono pt-0.5">
+                  🛡️ 已開啟：平滑保護防爆音（大音量會被適度壓制）
+                </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
                 <input type="checkbox" id="limiterToggle" checked class="sr-only peer" />
@@ -484,6 +487,6 @@
   </footer>
 
   <!-- Core JavaScript -->
-  <script src="app.js?v=1.0.8"></script>
+  <script src="app.js?v=1.0.9"></script>
 </body>
 </html>
