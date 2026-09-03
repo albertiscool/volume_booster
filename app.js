@@ -134,6 +134,8 @@ const elements = {
   limiterStatusNote: document.getElementById('limiterStatusNote'),
   vocalToggle: document.getElementById('vocalToggle'),
   bassToggle: document.getElementById('bassToggle'),
+  dynaudToggle: document.getElementById('dynaudToggle'),
+  dynaudStatusNote: document.getElementById('dynaudStatusNote'),
   exportBtn: document.getElementById('exportBtn'),
   cancelExportBtn: document.getElementById('cancelExportBtn'),
   exportProgressBox: document.getElementById('exportProgressBox'),
@@ -259,6 +261,7 @@ function setupEventListeners() {
   elements.limiterToggle.addEventListener('change', updateAudioNodes);
   elements.vocalToggle.addEventListener('change', updateAudioNodes);
   elements.bassToggle.addEventListener('change', updateAudioNodes);
+  elements.dynaudToggle.addEventListener('change', updateAudioNodes);
 
   // Video interaction for AudioContext unlocking
   elements.mainVideo.addEventListener('play', () => {
@@ -457,6 +460,20 @@ function updateAudioNodes() {
         ? '⚡ 已關閉：無任何抑制，100% 原始極限放大！'
         : '⚡ Limiter OFF: 100% Raw Uncompressed Gain!';
       elements.limiterStatusNote.className = 'text-[10px] text-amber-400 font-mono pt-0.5 font-bold animate-pulse';
+    }
+  }
+
+  if (elements.dynaudStatusNote) {
+    if (elements.dynaudToggle.checked) {
+      elements.dynaudStatusNote.textContent = currentLang === 'zh-TW'
+        ? '🔥 已開啟：匯出時每一幀音訊都會被推到最大！'
+        : '🔥 ON: Every frame pushed to max loudness!';
+      elements.dynaudStatusNote.className = 'text-[10px] text-red-400 font-mono pt-0.5 font-bold';
+    } else {
+      elements.dynaudStatusNote.textContent = currentLang === 'zh-TW'
+        ? '— 已關閉'
+        : '— OFF';
+      elements.dynaudStatusNote.className = 'text-[10px] text-slate-500 font-mono pt-0.5';
     }
   }
 
@@ -704,18 +721,27 @@ async function exportWithFFmpeg(volumeMultiplier) {
   }
   filters.push(`volume=${volumeMultiplier.toFixed(2)}`);
 
-  // Strictly align with the Soft Limiter switch above:
-  // - If switch is OFF: Do NOT apply any limiter or compressor! (100% raw amplified audio)
-  // - If switch is ON: Apply compressor dynamics without auto-level clamp
+  // Soft Limiter switch
   if (elements.limiterToggle.checked) {
     filters.push('acompressor=threshold=-12dB:ratio=14:attack=3:release=250:knee=2.8');
+  }
+
+  // Dynamic Loudness Maximizer (dynaudnorm):
+  // Analyzes audio frame-by-frame and normalizes each frame to peak at ~0 dBFS.
+  // This makes EVERY part of the audio as loud as physically possible in a digital file,
+  // maximizing perceived loudness on phone speakers.
+  if (elements.dynaudToggle.checked) {
+    filters.push('dynaudnorm=p=0.95:m=100:s=5:g=15');
   }
 
   const filterString = filters.join(',');
   const limiterMsg = elements.limiterToggle.checked
     ? (currentLang === 'zh-TW' ? '已啟用防破音限制器' : 'Limiter ON')
     : (currentLang === 'zh-TW' ? '無限制器(原始增益)' : 'Limiter OFF');
-  updateExportProgress(35, currentLang === 'zh-TW' ? `正在無損放大音軌（${limiterMsg}，原畫質 100%）...` : `Boosting audio (${limiterMsg})...`);
+  const dynaudMsg = elements.dynaudToggle.checked
+    ? (currentLang === 'zh-TW' ? ' + 極限響度' : ' + Max Loudness')
+    : '';
+  updateExportProgress(35, currentLang === 'zh-TW' ? `正在無損放大音軌（${limiterMsg}${dynaudMsg}，原畫質 100%）...` : `Boosting audio (${limiterMsg}${dynaudMsg})...`);
 
   // Execute FFmpeg: -c:v copy ensures video is NOT decoded or re-encoded. Fast in seconds!
   await ffmpeg.run(

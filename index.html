@@ -351,6 +351,26 @@
               </label>
             </div>
 
+            <!-- Dynamic Loudness Maximizer -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-red-950/60 to-orange-950/60 border border-red-800/80">
+              <div class="space-y-0.5 pr-2">
+                <div class="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
+                  <i class="fa-solid fa-fire text-red-400"></i>
+                  <span data-i18n="dynaud_title">🔥 極限響度模式 (Max Loudness)</span>
+                </div>
+                <p class="text-[11px] text-slate-400" data-i18n="dynaud_desc">
+                  逐幀動態正規化，將每一秒音訊都推到數位極限。下載後在手機上體感最大聲！
+                </p>
+                <div id="dynaudStatusNote" class="text-[10px] text-red-400 font-mono pt-0.5 font-bold">
+                  🔥 已開啟：匯出時每一幀音訊都會被推到最大！
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+                <input type="checkbox" id="dynaudToggle" checked class="sr-only peer" />
+                <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-red-500"></div>
+              </label>
+            </div>
+
           </div>
 
         </div>
@@ -487,6 +507,6 @@
   </footer>
 
   <!-- Core JavaScript -->
-  <script src="app.js?v=1.1.1"></script>
+  <script src="app.js?v=1.2.0"></script>
 </body>
 </html>
