@@ -608,7 +608,7 @@ async function getFFmpeg() {
 
     // Use single-threaded core that works everywhere without SharedArrayBuffer or cross-origin restrictions
     const ffmpeg = createFFmpeg({
-      log: false,
+      log: true,
       mainName: 'main',
       corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
     });
@@ -702,13 +702,13 @@ async function exportWithFFmpeg(volumeMultiplier) {
   if (elements.vocalToggle.checked) {
     filters.push('equalizer=f=2400:width_type=h:width=1200:g=6');
   }
-  filters.push(`volume=${volumeMultiplier.toFixed(2)}:precision=float`);
+  filters.push(`volume=${volumeMultiplier.toFixed(2)}`);
 
   // Strictly align with the Soft Limiter switch above:
   // - If switch is OFF: Do NOT apply any limiter or compressor! (100% raw amplified audio)
-  // - If switch is ON: Apply the exact same compressor dynamics as Web Audio API without auto-level clamp
+  // - If switch is ON: Apply compressor dynamics without auto-level clamp
   if (elements.limiterToggle.checked) {
-    filters.push('acompressor=threshold=-12dB:ratio=14:attack=3:release=250:knee=24dB');
+    filters.push('acompressor=threshold=-12dB:ratio=14:attack=3:release=250:knee=2.8');
   }
 
   const filterString = filters.join(',');
