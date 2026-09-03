@@ -1,0 +1,28 @@
+{
+  "name": "volume-booster",
+  "version": "1.0.0",
+  "description": "A modern web application to boost and enhance video sound volume with real-time preview and lossless export.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "serve": "node server.js"
+  },
+  "keywords": [
+    "volume-booster",
+    "video-audio-enhancer",
+    "ffmpeg-wasm",
+    "web-audio-api",
+    "sound-amplifier"
+  ],
+  "author": "albertiscool",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/albertiscool/volume_booster.git"
+  },
+  "bugs": {
+    "url": "https://github.com/albertiscool/volume_booster/issues"
+  },
+  "homepage": "https://github.com/albertiscool/volume_booster#readme"
+}

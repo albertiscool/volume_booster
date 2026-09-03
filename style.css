@@ -1,0 +1,94 @@
+/* Custom UI Enhancements for Volume Booster */
+
+/* Root variables */
+:root {
+  --teal-glow: 0 0 20px rgba(20, 184, 166, 0.4);
+  --cyan-glow: 0 0 20px rgba(6, 182, 212, 0.4);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Dropzone dragover dynamic pulse */
+#dropZone.dragover {
+  border-color: #2dd4bf;
+  background-color: rgba(20, 184, 166, 0.12);
+  transform: scale(1.01);
+  box-shadow: 0 0 30px rgba(45, 212, 191, 0.25);
+}
+
+/* Volume range slider custom styling */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.8), 0 0 2px #fff;
+  border: 2px solid #042f2e;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: #5eead4;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  cursor: pointer;
+  box-shadow: 0 0 12px rgba(45, 212, 191, 0.8), 0 0 2px #fff;
+  border: 2px solid #042f2e;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.25);
+  background: #5eead4;
+}
+
+/* Spectrum Canvas */
+#spectrumCanvas {
+  image-rendering: pixelated;
+}
+
+/* Glow button hover effect */
+#exportBtn:hover {
+  box-shadow: 0 0 25px rgba(45, 212, 191, 0.4);
+}
+
+/* Glassmorphism backdrop */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Number input spinners hide */
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
