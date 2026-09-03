@@ -179,25 +179,11 @@ function applyLanguage() {
 
 // --- Event Listeners Setup ---
 function setupEventListeners() {
-  // Button: Browse Local Files (forces Android system file picker / Downloads)
-  if (elements.btnPickLocal) {
-    elements.btnPickLocal.addEventListener('click', (e) => {
-      e.stopPropagation();
+  // Dropzone background click fallback: only trigger if clicking on background area
+  elements.dropZone.addEventListener('click', (e) => {
+    if (!e.target.closest('#btnPickLocal') && !e.target.closest('#btnPickGallery')) {
       elements.localFileInput.click();
-    });
-  }
-
-  // Button: Pick from Photo Picker / Gallery
-  if (elements.btnPickGallery) {
-    elements.btnPickGallery.addEventListener('click', (e) => {
-      e.stopPropagation();
-      elements.galleryFileInput.click();
-    });
-  }
-
-  // Dropzone click fallback: default to local file picker
-  elements.dropZone.addEventListener('click', () => {
-    elements.localFileInput.click();
+    }
   });
 
   // Handle file selection from either input
@@ -235,11 +221,10 @@ function setupEventListeners() {
     }
   });
 
-  // Change video button: trigger local file selection
+  // Change video button: reset input value so re-selecting the same file works
   elements.changeVideoBtn.addEventListener('click', () => {
     elements.localFileInput.value = '';
     elements.galleryFileInput.value = '';
-    elements.localFileInput.click();
   });
 
   // Volume Slider input
