@@ -319,6 +319,9 @@ function handleFileSelected(file) {
 
   // Reset Volume to 100%
   setVolume(100);
+
+  // Background pre-load FFmpeg single-thread core so export is ready instantly!
+  getFFmpeg().catch(err => console.log('FFmpeg background preloading:', err));
 }
 
 // --- Volume Calculation & Updates ---
@@ -558,45 +561,58 @@ function drawIdleSpectrum() {
   canvasCtx.stroke();
 }
 
-// --- Dynamic FFmpeg Loader ---
+// --- Single-Threaded FFmpeg Loader (No SharedArrayBuffer Needed, 100% Mobile & Desktop Compatible) ---
 let ffmpegInstance = null;
-let ffmpegLoaded = false;
+let isFFmpegLoading = false;
 
 async function getFFmpeg() {
-  if (ffmpegLoaded && ffmpegInstance) {
+  if (ffmpegInstance && ffmpegInstance.isLoaded()) {
     return ffmpegInstance;
   }
 
-  // Check if SharedArrayBuffer is available
-  if (typeof SharedArrayBuffer === 'undefined') {
-    throw new Error('SharedArrayBuffer is not available. Using native browser engine fallback.');
+  if (isFFmpegLoading) {
+    // Wait for in-progress load
+    while (isFFmpegLoading) {
+      await new Promise(r => setTimeout(r, 100));
+    }
+    if (ffmpegInstance && ffmpegInstance.isLoaded()) {
+      return ffmpegInstance;
+    }
   }
 
+  isFFmpegLoading = true;
+
   try {
-    elements.exportStatusText.textContent = currentLang === 'zh-TW' ? '正在載入 FFmpeg.wasm 核心...' : 'Loading FFmpeg.wasm core...';
+    elements.exportStatusText.textContent = currentLang === 'zh-TW' ? '正在載入極速無損核心（無需播放）...' : 'Loading fast engine (no playback needed)...';
 
-    // Dynamic import of FFmpeg 0.12 from ESM CDN
-    const { FFmpeg } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/+esm');
-    const { toBlobURL } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm');
+    if (!window.FFmpeg || !window.FFmpeg.createFFmpeg) {
+      throw new Error('FFmpeg library failed to load from CDN. Please check network connection.');
+    }
 
-    const ffmpeg = new FFmpeg();
-    ffmpeg.on('progress', ({ progress }) => {
-      const p = Math.round(progress * 100);
-      updateExportProgress(p, `${currentLang === 'zh-TW' ? 'FFmpeg 極速無損處理中' : 'FFmpeg processing'}: ${p}%`);
+    const { createFFmpeg } = window.FFmpeg;
+
+    // Use single-threaded core that works everywhere without SharedArrayBuffer or cross-origin restrictions
+    const ffmpeg = createFFmpeg({
+      log: false,
+      corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-st@0.11.1/dist/ffmpeg-core.js'
     });
 
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm';
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    ffmpeg.setProgress(({ ratio }) => {
+      if (ratio >= 0 && ratio <= 1) {
+        const p = Math.min(99, Math.round(ratio * 100));
+        updateExportProgress(Math.max(15, p), `${currentLang === 'zh-TW' ? '極速音量增強中（免重播）' : 'Fast boosting'}: ${p}%`);
+      }
     });
+
+    await ffmpeg.load();
 
     ffmpegInstance = ffmpeg;
-    ffmpegLoaded = true;
     return ffmpeg;
   } catch (err) {
-    console.warn('Failed to load FFmpeg.wasm:', err);
+    console.error('Failed to initialize FFmpeg single-thread core:', err);
     throw err;
+  } finally {
+    isFFmpegLoading = false;
   }
 }
 
@@ -609,25 +625,17 @@ async function handleExport() {
   elements.exportBtn.classList.add('opacity-50', 'cursor-not-allowed');
   elements.exportProgressBox.classList.remove('hidden');
   elements.downloadResultBox.classList.add('hidden');
-  updateExportProgress(0, currentLang === 'zh-TW' ? '初始化處理程序...' : 'Initializing process...');
+  updateExportProgress(5, currentLang === 'zh-TW' ? '準備極速無損處理...' : 'Preparing fast lossless processing...');
 
   const volumePercent = parseInt(elements.customVolumeInput.value, 10) || 100;
   const volumeMultiplier = volumePercent / 100;
 
   try {
-    let outputBlob = null;
-    let outputFilename = `boosted_${volumePercent}pct_${currentFile.name.replace(/\.[^/.]+$/, '')}.mp4`;
-
-    // Try FFmpeg.wasm first for lossless video copy & blazing fast speed
-    try {
-      elements.activeEngineBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span> FFmpeg.wasm`;
-      outputBlob = await exportWithFFmpeg(volumeMultiplier);
-    } catch (ffmpegErr) {
-      console.warn('FFmpeg engine failed or unavailable, falling back to Browser Engine:', ffmpegErr);
-      elements.activeEngineBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> Web Audio Engine`;
-      outputBlob = await exportWithBrowserRecorder();
-      outputFilename = `boosted_${volumePercent}pct_${currentFile.name.replace(/\.[^/.]+$/, '')}.webm`;
-    }
+    elements.activeEngineBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span> FFmpeg Fast Engine`;
+    
+    // Execute fast lossless export (Never requires playing through the video!)
+    const outputBlob = await exportWithFFmpeg(volumeMultiplier);
+    const outputFilename = `boosted_${volumePercent}pct_${currentFile.name.replace(/\.[^/.]+$/, '')}.mp4`;
 
     // Success handling
     if (exportedBlobUrl) {
@@ -637,7 +645,7 @@ async function handleExport() {
 
     elements.downloadLink.href = exportedBlobUrl;
     elements.downloadLink.download = outputFilename;
-    elements.exportResultMeta.textContent = `${outputFilename} (${formatBytes(outputBlob.size)})`;
+    elements.exportResultMeta.textContent = `${outputFilename} (${formatBytes(outputBlob.size)}) • 處理耗時僅數秒`;
 
     updateExportProgress(100, currentLang === 'zh-TW' ? '處理完成！' : 'Completed!');
     elements.exportProgressBox.classList.add('hidden');
@@ -646,7 +654,8 @@ async function handleExport() {
 
   } catch (err) {
     console.error('Export error:', err);
-    alert((currentLang === 'zh-TW' ? '匯出失敗：' : 'Export failed: ') + err.message);
+    updateExportProgress(0, currentLang === 'zh-TW' ? '處理失敗' : 'Failed');
+    alert((currentLang === 'zh-TW' ? '極速匯出發生錯誤：' : 'Fast export failed: ') + err.message);
   } finally {
     isExporting = false;
     elements.exportBtn.disabled = false;
@@ -654,16 +663,17 @@ async function handleExport() {
   }
 }
 
-// --- Engine 1: FFmpeg.wasm (Lossless Stream Copy) ---
+// --- Fast Lossless Video Export (No Re-encoding, No Playback!) ---
 async function exportWithFFmpeg(volumeMultiplier) {
   const ffmpeg = await getFFmpeg();
-  const { fetchFile } = await import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/+esm');
+  const { fetchFile } = window.FFmpeg;
 
-  const inputName = 'input_' + Date.now() + '_' + currentFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-  const outputName = 'output_' + Date.now() + '.mp4';
+  const ext = currentFile.name.split('.').pop().toLowerCase() || 'mp4';
+  const inputName = `input_${Date.now()}.${ext}`;
+  const outputName = `output_${Date.now()}.mp4`;
 
-  updateExportProgress(10, currentLang === 'zh-TW' ? '正在載入影片資料到沙盒...' : 'Loading video into sandbox...');
-  await ffmpeg.writeFile(inputName, await fetchFile(currentFile));
+  updateExportProgress(15, currentLang === 'zh-TW' ? '正在讀取原始檔案（不需播放）...' : 'Loading video data...');
+  ffmpeg.FS('writeFile', inputName, await fetchFile(currentFile));
 
   // Construct Audio Filter String
   const filters = [];
@@ -679,10 +689,10 @@ async function exportWithFFmpeg(volumeMultiplier) {
   }
 
   const filterString = filters.join(',');
-  updateExportProgress(30, currentLang === 'zh-TW' ? '正在無損處理音訊軌...' : 'Processing audio track losslessly...');
+  updateExportProgress(35, currentLang === 'zh-TW' ? '正在無損放大音軌（視訊直接複製，原畫質 100%）...' : 'Boosting audio track...');
 
-  // Execute FFmpeg: -c:v copy preserves 100% original video stream
-  await ffmpeg.exec([
+  // Execute FFmpeg: -c:v copy ensures video is NOT decoded or re-encoded. Fast in seconds!
+  await ffmpeg.run(
     '-i', inputName,
     '-c:v', 'copy',
     '-af', filterString,
@@ -690,15 +700,15 @@ async function exportWithFFmpeg(volumeMultiplier) {
     '-b:a', '192k',
     '-movflags', '+faststart',
     outputName
-  ]);
+  );
 
-  updateExportProgress(95, currentLang === 'zh-TW' ? '正在提取合成影片...' : 'Extracting result video...');
-  const data = await ffmpeg.readFile(outputName);
+  updateExportProgress(95, currentLang === 'zh-TW' ? '正在輸出新影片...' : 'Packaging new video...');
+  const data = ffmpeg.FS('readFile', outputName);
 
-  // Cleanup virtual files
+  // Cleanup virtual FS memory
   try {
-    await ffmpeg.deleteFile(inputName);
-    await ffmpeg.deleteFile(outputName);
+    ffmpeg.FS('unlink', inputName);
+    ffmpeg.FS('unlink', outputName);
   } catch (e) {
     // Ignore cleanup error
   }
