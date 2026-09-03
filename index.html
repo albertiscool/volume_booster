@@ -102,29 +102,58 @@
     </div>
 
     <!-- Step 1: Upload Dropzone -->
-    <section id="uploadSection" class="relative group">
-      <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-teal-400/70 rounded-2xl p-8 sm:p-12 text-center bg-slate-900/40 hover:bg-slate-900/80 transition-all duration-300 cursor-pointer backdrop-blur-sm relative overflow-hidden">
-        <input type="file" id="videoFileInput" accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-matroska,video/*" class="hidden" />
+    <section id="uploadSection" class="relative group space-y-3">
+      <!-- Hidden file inputs: -->
+      <!-- 1. Local Files input (forces Android/iOS to open System File Manager / Downloads instead of restricting to Google Photos) -->
+      <input type="file" id="localFileInput" accept=".mp4,.webm,.mov,.mkv,.avi,.3gp,.ts,.m4v,*/*" class="hidden" />
+      <!-- 2. Gallery / Media picker input (for users who prefer Photo Library / Google Photos) -->
+      <input type="file" id="galleryFileInput" accept="video/*" class="hidden" />
+
+      <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-teal-400/70 rounded-2xl p-6 sm:p-10 text-center bg-slate-900/40 hover:bg-slate-900/80 transition-all duration-300 backdrop-blur-sm relative overflow-hidden">
         
-        <div class="flex flex-col items-center justify-center space-y-4 pointer-events-none">
+        <div class="flex flex-col items-center justify-center space-y-4">
           <div class="w-16 h-16 rounded-2xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 text-2xl group-hover:scale-110 group-hover:bg-teal-500/20 transition-all duration-300 shadow-inner">
             <i class="fa-solid fa-cloud-arrow-up"></i>
           </div>
           <div class="space-y-1">
             <p class="text-base sm:text-lg font-semibold text-slate-200" data-i18n="drop_title">
-              點擊此處或將影片檔案拖曳至此
+              選取影片檔案或將檔案拖曳至此
             </p>
             <p class="text-xs sm:text-sm text-slate-400" data-i18n="drop_subtitle">
-              支援 MP4、WebM、MOV、MKV、AVI 等常見格式（檔案大小不受限制）
+              支援 MP4、WebM、MOV、MKV、AVI、3GP 等常見格式（檔案大小不受限）
             </p>
           </div>
-          <div class="flex flex-wrap justify-center gap-2 pt-2">
+
+          <!-- Direct action buttons for Mobile & Desktop -->
+          <div class="flex flex-wrap items-center justify-center gap-3 pt-2 w-full max-w-lg z-10">
+            <button type="button" id="btnPickLocal" class="flex-1 sm:flex-none px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-400 hover:to-cyan-400 text-slate-950 font-bold text-xs sm:text-sm shadow-lg shadow-teal-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+              <i class="fa-solid fa-folder-open text-base"></i>
+              <span data-i18n="pick_local">選取本機檔案 (下載/資料夾)</span>
+            </button>
+
+            <button type="button" id="btnPickGallery" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700 font-medium text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+              <i class="fa-solid fa-images text-base text-teal-400"></i>
+              <span data-i18n="pick_gallery">從相簿 / 影片庫選取</span>
+            </button>
+          </div>
+
+          <!-- Format badges -->
+          <div class="flex flex-wrap justify-center gap-2 pt-1 pointer-events-none">
             <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800/80 border border-slate-700/80 text-slate-400">MP4</span>
             <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800/80 border border-slate-700/80 text-slate-400">WEBM</span>
             <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800/80 border border-slate-700/80 text-slate-400">MOV</span>
             <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800/80 border border-slate-700/80 text-slate-400">MKV</span>
+            <span class="px-2.5 py-1 text-xs rounded-md bg-slate-800/80 border border-slate-700/80 text-slate-400">3GP</span>
           </div>
         </div>
+      </div>
+
+      <!-- Mobile Tip Note -->
+      <div class="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 flex items-start gap-2.5 text-xs text-slate-400">
+        <i class="fa-solid fa-circle-info text-teal-400 mt-0.5 flex-shrink-0"></i>
+        <span data-i18n="mobile_tip">
+          💡 手機小撇步：若選取影片時只看得到 Google 相簿，請點擊「選取本機檔案」，即可開啟手機檔案管理員瀏覽「下載項目 (Downloads)」、LINE 儲存影片或內部儲存空間。
+        </span>
       </div>
     </section>
 

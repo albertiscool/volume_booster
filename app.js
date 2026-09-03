@@ -9,8 +9,11 @@ const I18N = {
     hero_badge: '100% 瀏覽器本地運算 • 零上傳 • 隱私安全',
     hero_title: '讓你的影片聲音不再細小無聲',
     hero_desc: '支援高達 600% 音量增強，搭載防破音智慧壓縮器與人聲清晰化。即時預覽試聽，極速無損匯出新影片！',
-    drop_title: '點擊此處或將影片檔案拖曳至此',
-    drop_subtitle: '支援 MP4、WebM、MOV、MKV、AVI 等常見格式（檔案大小不受限制）',
+    drop_title: '選取影片檔案或將檔案拖曳至此',
+    drop_subtitle: '支援 MP4、WebM、MOV、MKV、AVI、3GP 等常見格式（檔案大小不受限）',
+    pick_local: '選取本機檔案 (下載/資料夾)',
+    pick_gallery: '從相簿 / 影片庫選取',
+    mobile_tip: '💡 手機小撇步：若選取影片時只看得到 Google 相簿，請點擊「選取本機檔案」，即可開啟手機檔案管理員瀏覽「下載項目 (Downloads)」、LINE 儲存影片或內部儲存空間。',
     change_video: '更換影片',
     spectrum_title: '即時音訊頻譜與動態電平',
     volume_boost_title: '音量放大倍率 (Volume Boost)',
@@ -44,8 +47,11 @@ const I18N = {
     hero_badge: '100% Client-Side • Zero Upload • Privacy First',
     hero_title: 'Boost Low-Volume Videos Instantly',
     hero_desc: 'Up to 600% sound boost with anti-clipping limiter and vocal clarity enhancer. Real-time preview & fast lossless export!',
-    drop_title: 'Click to select or drag & drop video here',
-    drop_subtitle: 'Supports MP4, WebM, MOV, MKV, AVI and more (no file size limits)',
+    drop_title: 'Select video file or drag & drop here',
+    drop_subtitle: 'Supports MP4, WebM, MOV, MKV, AVI, 3GP and more (no file size limits)',
+    pick_local: 'Browse Local Files (Storage / Downloads)',
+    pick_gallery: 'Pick from Gallery (Google Photos)',
+    mobile_tip: '💡 Mobile Tip: If your phone only shows Google Photos, tap "Browse Local Files" to open the system file manager and access Downloads, LINE videos, or internal storage.',
     change_video: 'Change Video',
     spectrum_title: 'Live Audio Spectrum & Peak VU Meter',
     volume_boost_title: 'Volume Boost Multiplier',
@@ -105,7 +111,10 @@ const elements = {
   langText: document.getElementById('langText'),
   uploadSection: document.getElementById('uploadSection'),
   dropZone: document.getElementById('dropZone'),
-  fileInput: document.getElementById('videoFileInput'),
+  localFileInput: document.getElementById('localFileInput'),
+  galleryFileInput: document.getElementById('galleryFileInput'),
+  btnPickLocal: document.getElementById('btnPickLocal'),
+  btnPickGallery: document.getElementById('btnPickGallery'),
   editorSection: document.getElementById('editorSection'),
   fileDisplayName: document.getElementById('fileDisplayName'),
   fileDisplayMeta: document.getElementById('fileDisplayMeta'),
@@ -170,9 +179,35 @@ function applyLanguage() {
 
 // --- Event Listeners Setup ---
 function setupEventListeners() {
-  // Dropzone click & drag events
-  elements.dropZone.addEventListener('click', () => elements.fileInput.click());
-  elements.fileInput.addEventListener('change', (e) => {
+  // Button: Browse Local Files (forces Android system file picker / Downloads)
+  if (elements.btnPickLocal) {
+    elements.btnPickLocal.addEventListener('click', (e) => {
+      e.stopPropagation();
+      elements.localFileInput.click();
+    });
+  }
+
+  // Button: Pick from Photo Picker / Gallery
+  if (elements.btnPickGallery) {
+    elements.btnPickGallery.addEventListener('click', (e) => {
+      e.stopPropagation();
+      elements.galleryFileInput.click();
+    });
+  }
+
+  // Dropzone click fallback: default to local file picker
+  elements.dropZone.addEventListener('click', () => {
+    elements.localFileInput.click();
+  });
+
+  // Handle file selection from either input
+  elements.localFileInput.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileSelected(e.target.files[0]);
+    }
+  });
+
+  elements.galleryFileInput.addEventListener('change', (e) => {
     if (e.target.files && e.target.files[0]) {
       handleFileSelected(e.target.files[0]);
     }
@@ -200,9 +235,11 @@ function setupEventListeners() {
     }
   });
 
+  // Change video button: trigger local file selection
   elements.changeVideoBtn.addEventListener('click', () => {
-    elements.fileInput.value = '';
-    elements.fileInput.click();
+    elements.localFileInput.value = '';
+    elements.galleryFileInput.value = '';
+    elements.localFileInput.click();
   });
 
   // Volume Slider input
@@ -254,8 +291,12 @@ function setupEventListeners() {
 
 // --- File Selection & Video Loading ---
 function handleFileSelected(file) {
-  if (!file.type.startsWith('video/') && !file.name.match(/\.(mp4|webm|mkv|mov|avi|ts|flv)$/i)) {
-    alert(currentLang === 'zh-TW' ? '請選取有效的影片檔案！' : 'Please select a valid video file!');
+  // Broad video validation supporting files without MIME types from Android file manager
+  const isVideoType = file.type && file.type.startsWith('video/');
+  const isVideoExt = file.name && file.name.match(/\.(mp4|webm|mkv|mov|avi|ts|flv|3gp|m4v|wmv|mts|m2ts)$/i);
+
+  if (!isVideoType && !isVideoExt) {
+    alert(currentLang === 'zh-TW' ? '請選取有效的影片檔案 (例如 MP4, WebM, MOV, MKV, 3GP)！' : 'Please select a valid video file (e.g. MP4, WebM, MOV, MKV, 3GP)!');
     return;
   }
 
